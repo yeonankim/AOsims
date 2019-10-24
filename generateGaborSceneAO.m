@@ -1,4 +1,4 @@
-function scene = generateGaborSceneAO(display, coltype, sf, ort, contrast)
+function scene = generateGaborSceneAO(display, coltype, ort, sf, contrast)
 
 % coltype: 1 -- color, 0 -- black white
 % ort: 1 -- vertical, 0 -- horizontal
@@ -15,9 +15,9 @@ TCA = [0, 0];
 % BackgroundCol = [0.5, 0.5, 0];
 % correctedBackgroundColBit = CorrectGammaBitRG(BackgroundCol, inverted_gamma_params, RGLuminanceScaling);
 
-FOV = 1.5;
+FOV = 1.5 * 0.5;
 
-StimulusSizePerDegree = 553 * 0.2;
+StimulusSizePerDegree = 553;
 StimulusSizeInPix = StimulusSizePerDegree * FOV;
 StimulusSizeInDeg = FOV;
 
@@ -33,10 +33,9 @@ stim(:,:,1) = stim_plane_red;
 stim(:,:,2) = stim_plane_green;
 % stim1 = CorrectGammaBitTXTRG(stim1, inverted_gamma_params, RGLuminanceScaling);
 
+scene = sceneFromFile(stim, 'rgb', [], display);
 
 figure; 
 imshow(stim);
 
-scene = sceneFromFile(stim, 'rgb', [], display);
-    
 end

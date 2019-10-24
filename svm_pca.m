@@ -1,4 +1,4 @@
-function svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2)
+function percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2)
 
 % Simulate a 2AFC task 
 taskIntervals = 2;
@@ -34,7 +34,7 @@ CVSVM = crossval(svm,'KFold',kFold);
 % trained on out-of-sample responses
 fractionCorrect = 1 - kfoldLoss(CVSVM,'lossfun','classiferror','mode','individual');
 % Average percent correct across all folds 
-percentCorrect = mean(fractionCorrect)*100
+percentCorrect = mean(fractionCorrect)*100; 
 
 end 
 

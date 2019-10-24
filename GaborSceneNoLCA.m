@@ -1,4 +1,5 @@
-clear; close all;
+clear all; 
+close all;
 
 %% Parameters
 %
@@ -39,59 +40,106 @@ if LCAoff; opticsName = 'human-wvf-nolca'; end
 optics = opticsSet(optics, 'model', 'shift invariant', 'name', opticsName);
 theOI = oiSet(theOI,'optics',optics);
 
-% theOI = oiCreate('wvf human');
+theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
 presentationDisplay = displayCreate('AOSim-Seattle');
 
-
-
-%% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
-scene1 = generateGaborSceneAO(presentationDisplay, 0, 50, 0, .05); % inputs: (display, coltype, sf, ort, contrast)
-scene2 = generateGaborSceneAO(presentationDisplay, 0, 50, 1, .05); % inputs: (display, coltype, sf, ort, contrast)
-
-% scene = generateTwoLineScene(presentationDisplay,1,20);
-% visualizeScene(scene, 'displayContrastProfiles', true); 
-
-
-%% Compute and visualize the retinal images with and without LCA
-theOIscene1 = oiCompute(theOI, scene1);
-theOIscene2 = oiCompute(theOI, scene2);
-
-% % Visualize the PSFs and OTFs
-% % Visualize the PSF/OTF at 530 (in-focus)
-% visualizedSpatialSupportArcMin = 6;
-% visualizedSpatialSfrequencyCPD = 120;
-% visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-% visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-
-% % Visualize the optical image as an RGB image and a few spectral slices
-% visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
-%     'displayRetinalContrastProfiles', false);
-% visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
-%     'displayRetinalContrastProfiles', false);
+scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
+sceneFov = sceneGet(scene_sample, 'fov'); 
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
-theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-   'fovDegs', sceneGet(scene1, 'fov'), ...      % match mosaic width to stimulus size
-   'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
-   'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
-   'integrationTime', 30/1000, ...             % 30 msec integration time
-   'maxGridAdjustmentIterations', 50, ...
-   'spatialDensity', [0 0.9 0.1 0.0]');        % terminate iterative lattice adjustment after 50 iterations
+KLMSdensity = {[0 0.5 0.5 0.0]', [0 0.8 0.2 0.0]', [0 0.2 0.8 0.0]'}; 
 
-%% Compute some instances of cone mosaic excitations
-nInstancesNum = 32;
-% Zero fixational eye movements
-emPath = zeros(nInstancesNum, 1, 2);
-% Compute mosaic excitation responses
-coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
-coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
+for mos = 1:length(KLMSdensity)
+   
+    theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
+       'fovDegs', sceneFov, ...                     % match mosaic width to stimulus size 
+       'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
+       'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
+       'integrationTime', 10/1000, ...             % 30 msec integration time
+       'maxGridAdjustmentIterations', 50, ...
+       'spatialDensity', KLMSdensity{mos});        % terminate iterative lattice adjustment after 50 iterations
+   
+    savename = ['mosaic_cond', num2str(mos), '.mat']; 
+    save(savename, 'theMosaic'); 
+   
+    nOIs = 2; 
+    nSF = 7; 
+    nContrast = 8; 
+    coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
+    ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
+    sf_set = linspace(5, 50, nSF);             % for each of the three above
+    contrast_set = linspace(0.001, 0.1, nContrast); % for each of the three above
 
-% % Compute the mean response across all instances
-% meanConeExcitation = mean(coneExcitationCond1,1);
-% visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
-
-svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2)
+    condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
+    
+    for oi = nOIs
+        if oi == 1:nOIs
+            theOI = theOI_control; 
+            disp('Now using the control OI.'); 
+        end 
+        
+        for exp = 1:length(coltype_set)
+            this_coltype = coltype_set{exp}; 
+            this_ort     = ort_set{exp}; 
+            fprintf('Experimental condition %d. \n', exp); 
+            
+            result = []; 
+            
+            for cnd = 1:size(condIdPerColtype, 1)
+                close all; 
+                
+                this_sf       = sf_set(condIdPerColtype(cnd, 1)); 
+                this_contrast = contrast_set(condIdPerColtype(cnd, 2)); 
+                
+                %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
+                scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
+                scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
+                % visualizeScene(scene, 'displayContrastProfiles', true);
+                
+                
+                %% Compute and visualize the retinal images with and without LCA
+                theOIscene1 = oiCompute(theOI, scene1);
+                theOIscene2 = oiCompute(theOI, scene2);
+                
+                % % Visualize the PSFs and OTFs
+                % % Visualize the PSF/OTF at 530 (in-focus)
+                % visualizedSpatialSupportArcMin = 6;
+                % visualizedSpatialSfrequencyCPD = 120;
+                % visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                % visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                
+                % % Visualize the optical image as an RGB image and a few spectral slices
+                % visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
+                %     'displayRetinalContrastProfiles', false);
+                % visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
+                %     'displayRetinalContrastProfiles', false);
+                
+                
+                %% Compute some instances of cone mosaic excitations
+                nInstancesNum = 32;
+                % Zero fixational eye movements
+                emPath = zeros(nInstancesNum, 1, 2);
+                % Compute mosaic excitation responses
+                coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
+                coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
+                
+                % % Compute the mean response across all instances
+                % meanConeExcitation = mean(coneExcitationCond1,1);
+                % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
+                
+                percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
+                
+                svm_result(cnd) = percentCorrect; 
+                fprintf('SF %f, Contrast %f: %f', [this_sf, this_contrast, percentCorrect]); 
+                
+            end
+            result{oi} = [result; reshape(svm_result, nSF, nContrast)];
+        end
+        Result{oi} = result; 
+    end
+    save(savename, Result, '-a'); 
+end
