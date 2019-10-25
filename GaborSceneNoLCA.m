@@ -50,17 +50,20 @@ presentationDisplay = displayCreate('AOSim-Seattle_Gabor');
 % (d.dpi/2.54)* (1/((2*atan(1/(2*d.dist*100)))*(180/pi))) == 553 
 % from 'AOSim-Seattle.mat'
 
-scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 50, 1); % just to get the fov for mosaic generation 
-sceneFov = 0.75; %sceneGet(scene_sample, 'fov');
+scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
+sceneFov = 0.77;%sceneGet(scene_sample, 'fov');
+% ok, if this value is smaller than that size of the scene, the mosaic
+% generation gets error. Here as a quick remedy artificially giving a
+% slightly higer fov. 
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
-KLMSdensity = {[0 0.5 0.5 0.0]', [0 0.8 0.2 0.0]', [0 0.2 0.8 0.0]'}; 
+KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.8 0.2 0.0]', [0.0 0.2 0.8 0.0]'}; 
 
 for mos = 1:length(KLMSdensity)
-   
+    
     theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-       'fovDegs', sceneFov, ...                     % match mosaic width to stimulus size 
+       'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
        'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
        'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
        'integrationTime', 10/1000, ...             % 30 msec integration time
