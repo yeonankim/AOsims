@@ -13,7 +13,7 @@ pcComponentsNumForClassification = 2;
 classificationMatrixProjection = classificationMatrix * pcVectors(:,1:pcComponentsNumForClassification);
 
 % Visualize the classification matrix and its projection to the PC space
-visualizeClassificationMatrices(classificationMatrix, classificationMatrixProjection, taskIntervals)
+visualizeClassificationMatrices(classificationMatrix, classificationMatrixProjection, taskIntervals);
 
 % Visualize the first 4 principal components. Note that only the first
 % component contains some structure, which resembles the stimulus to be detected.
@@ -27,7 +27,7 @@ svm = fitcsvm(classificationMatrixProjection,classLabels);
 visualizeSVMmodel(svm, classificationMatrixProjection, classLabels);
 
 % Perform a 10-fold cross-validation on the trained SVM model
-kFold = 10;
+kFold = 4;
 CVSVM = crossval(svm,'KFold',kFold);
 
 % Compute classification loss for the in-sample responses using a model 
@@ -51,7 +51,6 @@ coneExcitationsTestReshaped = reshape(coneExcitationsClass1, [nTrials nRows*mCol
 coneExcitationsNullReshaped = reshape(coneExcitationsClass2, [nTrials nRows*mCols nTimeBins]);
 testResponses = coneExcitationsTestReshaped(:, nonNullConeIndices, :);
 nullResponses = coneExcitationsNullReshaped(:, nonNullConeIndices, :);
-size(nullResponses)
 
 % Collapse response vectors across space and time
 responseSize = numel(nonNullConeIndices)*nTimeBins;

@@ -66,18 +66,17 @@ for mos = 1:length(KLMSdensity)
     savename = ['mosaic_cond', num2str(mos), '.mat']; 
     save(savename, 'theMosaic'); 
    
-    nOIs = 2; 
     nSF = 7; 
-    nContrast = 8; 
+    nContrast = 6; 
     coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
     ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
     sf_set = linspace(5, 50, nSF);             % for each of the three above
-    contrast_set = linspace(0.001, 0.1, nContrast); % for each of the three above
+    contrast_set = linspace(0.001, 0.06, nContrast); % for each of the three above
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
-    for oi = nOIs
-        if oi == 1:nOIs
+    for oi = 1:2
+        if oi == 2
             theOI = theOI_control; 
             disp('Now using the control OI.'); 
         end 
@@ -120,7 +119,7 @@ for mos = 1:length(KLMSdensity)
                 
                 
                 %% Compute some instances of cone mosaic excitations
-                nInstancesNum = 32;
+                nInstancesNum = 64;
                 % Zero fixational eye movements
                 emPath = zeros(nInstancesNum, 1, 2);
                 % Compute mosaic excitation responses
@@ -134,12 +133,12 @@ for mos = 1:length(KLMSdensity)
                 percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
                 
                 svm_result(cnd) = percentCorrect; 
-                fprintf('SF %f, Contrast %f: %f', [this_sf, this_contrast, percentCorrect]); 
+                fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]); 
                 
             end
             result{oi} = [result; reshape(svm_result, nSF, nContrast)];
         end
         Result{oi} = result; 
     end
-    save(savename, Result, '-a'); 
+    save(savename, 'Result', '-a'); 
 end
