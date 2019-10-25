@@ -15,7 +15,7 @@ TCA = [0, 0];
 % BackgroundCol = [0.5, 0.5, 0];
 % correctedBackgroundColBit = CorrectGammaBitRG(BackgroundCol, inverted_gamma_params, RGLuminanceScaling);
 
-FOV = 1.5 * 0.5;
+FOV = 1.5;
 
 StimulusSizePerDegree = 553;
 StimulusSizeInPix = StimulusSizePerDegree * FOV;

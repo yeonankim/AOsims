@@ -44,7 +44,10 @@ theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
-presentationDisplay = displayCreate('AOSim-Seattle');
+presentationDisplay = displayCreate('AOSim-Seattle_Gabor');
+% ppd = 553; using 'AOSim-Seattle_Gabor.mat' - altered d.dpi such that
+% (d.dpi/2.54)* (1/((2*atan(1/(2*d.dist*100)))*(180/pi))) == 553 
+% from 'AOSim-Seattle.mat'
 
 scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
 sceneFov = sceneGet(scene_sample, 'fov'); 
