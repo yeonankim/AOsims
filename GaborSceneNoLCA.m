@@ -60,7 +60,7 @@ sceneFov = 0.77;%sceneGet(scene_sample, 'fov');
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
 KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.8 0.2 0.0]', [0.0 0.2 0.8 0.0]'}; 
 
-for mos = 1:length(KLMSdensity)
+for mos = 2:length(KLMSdensity)
     
     theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
        'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
@@ -88,12 +88,11 @@ for mos = 1:length(KLMSdensity)
             disp('Now using the control OI.'); 
         end 
         
+        result = []; 
         for exp = 1:length(coltype_set)
             this_coltype = coltype_set{exp}; 
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 
-            
-            result = []; 
             
             for cnd = 1:size(condIdPerColtype, 1)
                 close all; 
@@ -143,9 +142,9 @@ for mos = 1:length(KLMSdensity)
                 fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]); 
                 
             end
-            result{oi} = [result; reshape(svm_result, nSF, nContrast)];
+            result = [result; reshape(svm_result, nSF, nContrast)'];
         end
         Result{oi} = result; 
     end
-    save(savename, 'Result', '-a'); 
+    save(savename, 'Result', '-append'); 
 end
