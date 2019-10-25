@@ -44,13 +44,14 @@ theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
+% presentationDisplay = displayCreate('AOSim-Seattle');
 presentationDisplay = displayCreate('AOSim-Seattle_Gabor');
 % ppd = 553; using 'AOSim-Seattle_Gabor.mat' - altered d.dpi such that
 % (d.dpi/2.54)* (1/((2*atan(1/(2*d.dist*100)))*(180/pi))) == 553 
 % from 'AOSim-Seattle.mat'
 
-scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
-sceneFov = sceneGet(scene_sample, 'fov'); 
+scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 50, 1); % just to get the fov for mosaic generation 
+sceneFov = 0.75; %sceneGet(scene_sample, 'fov');
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
@@ -74,7 +75,7 @@ for mos = 1:length(KLMSdensity)
     coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
     ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
     sf_set = linspace(5, 50, nSF);             % for each of the three above
-    contrast_set = linspace(0.001, 0.06, nContrast); % for each of the three above
+    contrast_set = linspace(0.001, 0.05, nContrast); % for each of the three above
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
