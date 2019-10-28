@@ -9,7 +9,7 @@ taskIntervals = 2;
 [pcVectors, ~, ~, ~,varianceExplained] = pca(classificationMatrix);
 
 % Project the responses onto the space formed by the first 4 PC vectors
-pcComponentsNumForClassification = 2;
+pcComponentsNumForClassification = 40;
 classificationMatrixProjection = classificationMatrix * pcVectors(:,1:pcComponentsNumForClassification);
 
 % Visualize the classification matrix and its projection to the PC space
@@ -27,7 +27,7 @@ svm = fitcsvm(classificationMatrixProjection,classLabels);
 visualizeSVMmodel(svm, classificationMatrixProjection, classLabels);
 
 % Perform a 10-fold cross-validation on the trained SVM model
-kFold = 5;
+kFold = 10;
 CVSVM = crossval(svm,'KFold',kFold);
 
 % Compute classification loss for the in-sample responses using a model 
