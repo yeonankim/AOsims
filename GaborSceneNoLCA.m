@@ -44,48 +44,67 @@ theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
-presentationDisplay = displayCreate('AOSim-Seattle_Gabor');
+presentationDisplay = displayCreate('AOSim-Seattle');
 
 scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
-sceneFov = 0.77;%sceneGet(scene_sample, 'fov');
+sceneFov = 1;%sceneGet(scene_sample, 'fov');
 % ok, if this value is smaller than that size of the scene, the mosaic
 % generation gets error. Here as a quick remedy artificially giving a
 % slightly higer fov. 
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
-KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.8 0.2 0.0]', [0.0 0.2 0.8 0.0]'}; 
+KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.9 0.1 0.0]'};%, [0.0 0.2 0.8 0.0]'};
+nSF = 3;
+nContrast = 6;
+coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
+ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
+sf_set = [10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
+contrast_set = 10.^linspace(log10(0.001), log10(0.03), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
 
-for mos = 2:length(KLMSdensity)
+% Making dir to save cone excitation instances
+parentdir = 'ConeExitationInstances'; 
+if ~isfolder(parentdir)
+    mkdir(parentdir);
+end
+
+resultdir = 'SVMResults';
+if ~isfolder(resultdir)
+    mkdir(resultdir);
+end
+
+for mos = 1:length(KLMSdensity)
     
-    theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-       'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
-       'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
-       'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
-       'integrationTime', 10/1000, ...             % 30 msec integration time
-       'maxGridAdjustmentIterations', 50, ...
-       'spatialDensity', KLMSdensity{mos});        % terminate iterative lattice adjustment after 50 iterations
+    this_KLMSdensity = KLMSdensity{mos}; 
+    
+%     theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
+%        'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
+%        'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
+%        'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
+%        'integrationTime', 10/1000, ...             % 30 msec integration time
+%        'maxGridAdjustmentIterations', 50, ...
+%        'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
    
-    savename = ['mosaic_cond', num2str(mos), '.mat']; 
-    save(savename, 'theMosaic'); 
-   
-    nSF = 7; 
-    nContrast = 6; 
-    coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
-    ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
-    sf_set = linspace(5, 50, nSF);             % for each of the three above
-    contrast_set = linspace(0.001, 0.05, nContrast); % for each of the three above
+
+    savename = ['mosaicCond', num2str(mos), '.mat']; 
+%     savename = [resultdir, '/mosaicCond', num2str(mos), '.mat']; 
+    
+    load(savename); 
+%     save(savename, 'theMosaic', 'this_KLMSdensity', 'sf_set', 'contrast_set'); 
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
-    for oi = 1:2
+    for oi = 1 %1:2 **Running only for AO setup
         if oi == 2
             theOI = theOI_control; 
             disp('Now using the control OI.'); 
         end 
         
-        result = []; 
-        for exp = 1:length(coltype_set)
+        
+        for exp = 3 %1:length(coltype_set) **Running only for experiment 3
+            
+            Result{oi, exp} = nan(nContrast, nSF); 
+            
             this_coltype = coltype_set{exp}; 
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 
@@ -121,7 +140,7 @@ for mos = 2:length(KLMSdensity)
                 
                 
                 %% Compute some instances of cone mosaic excitations
-                nInstancesNum = 64;
+                nInstancesNum = 10;
                 % Zero fixational eye movements
                 emPath = zeros(nInstancesNum, 1, 2);
                 % Compute mosaic excitation responses
@@ -134,13 +153,14 @@ for mos = 2:length(KLMSdensity)
                 
                 percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
                 
-                svm_result(cnd) = percentCorrect; 
-                fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]); 
+                fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);                 
+                Result{oi, exp}(mod(cnd-1, nContrast)+1, floor((cnd-1)/nContrast)+1) = percentCorrect; 
                 
+                save(savename, 'Result', '-append'); 
+                
+%                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
+%                 save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2'); 
             end
-            result = [result; reshape(svm_result, nSF, nContrast)'];
         end
-        Result{oi} = result; 
-    end
-    save(savename, 'Result', '-append'); 
+    end    
 end

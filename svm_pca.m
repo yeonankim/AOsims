@@ -27,7 +27,7 @@ svm = fitcsvm(classificationMatrixProjection,classLabels);
 visualizeSVMmodel(svm, classificationMatrixProjection, classLabels);
 
 % Perform a 10-fold cross-validation on the trained SVM model
-kFold = 4;
+kFold = 5;
 CVSVM = crossval(svm,'KFold',kFold);
 
 % Compute classification loss for the in-sample responses using a model 

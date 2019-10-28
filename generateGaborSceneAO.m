@@ -15,8 +15,8 @@ TCA = [0, 0];
 % BackgroundCol = [0.5, 0.5, 0];
 % correctedBackgroundColBit = CorrectGammaBitRG(BackgroundCol, inverted_gamma_params, RGLuminanceScaling);
 
-FOV = 1.5 * 0.5; 
-StimulusSizePerDegree = 553;
+FOV = 1; %1.5 * 0.5; 
+StimulusSizePerDegree = 800; %553;
 StimulusSizeInPix = StimulusSizePerDegree * FOV;
 
 GaussianConstant = 4;
@@ -33,7 +33,7 @@ stim(:,:,2) = stim_plane_green;
 
 scene = sceneFromFile(stim, 'rgb', [], display);
 
-figure; 
-imshow(stim);
+% figure; 
+% imshow(stim);
 
 end
