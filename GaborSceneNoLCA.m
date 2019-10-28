@@ -47,7 +47,7 @@ theOI_control = oiCreate('wvf human');
 presentationDisplay = displayCreate('AOSim-Seattle');
 
 scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
-sceneFov = 1;%sceneGet(scene_sample, 'fov');
+sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 % ok, if this value is smaller than that size of the scene, the mosaic
 % generation gets error. Here as a quick remedy artificially giving a
 % slightly higer fov. 
@@ -73,6 +73,8 @@ if ~isfolder(resultdir)
     mkdir(resultdir);
 end
 
+pool = parpool(feature('numCores')); 
+
 for mos = 1:length(KLMSdensity)
     
     this_KLMSdensity = KLMSdensity{mos}; 
@@ -95,7 +97,6 @@ for mos = 1:length(KLMSdensity)
             theOI = theOI_control; 
             disp('Now using the control OI.'); 
         end 
-        
         
         for exp = 3 %1:length(coltype_set) **Running only for experiment 3
             
@@ -155,7 +156,7 @@ for mos = 1:length(KLMSdensity)
                 save(savename, 'Result', '-append'); 
                 
                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2'); 
+                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', 'v7.3'); 
             end
         end
     end    
