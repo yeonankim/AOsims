@@ -77,20 +77,16 @@ for mos = 1:length(KLMSdensity)
     
     this_KLMSdensity = KLMSdensity{mos}; 
     
-%     theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-%        'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
-%        'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
-%        'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
-%        'integrationTime', 10/1000, ...             % 30 msec integration time
-%        'maxGridAdjustmentIterations', 50, ...
-%        'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
+    theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
+       'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
+       'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
+       'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
+       'integrationTime', 10/1000, ...             % 30 msec integration time
+       'maxGridAdjustmentIterations', 50, ...
+       'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
    
-
-    savename = ['mosaicCond', num2str(mos), '.mat']; 
-%     savename = [resultdir, '/mosaicCond', num2str(mos), '.mat']; 
-    
-    load(savename); 
-%     save(savename, 'theMosaic', 'this_KLMSdensity', 'sf_set', 'contrast_set'); 
+    savename = [resultdir, '/mosaicCond', num2str(mos), '.mat']; 
+    save(savename, 'theMosaic', 'this_KLMSdensity', 'sf_set', 'contrast_set'); 
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
@@ -140,7 +136,7 @@ for mos = 1:length(KLMSdensity)
                 
                 
                 %% Compute some instances of cone mosaic excitations
-                nInstancesNum = 10;
+                nInstancesNum = 1024;
                 % Zero fixational eye movements
                 emPath = zeros(nInstancesNum, 1, 2);
                 % Compute mosaic excitation responses
@@ -158,8 +154,8 @@ for mos = 1:length(KLMSdensity)
                 
                 save(savename, 'Result', '-append'); 
                 
-%                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-%                 save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2'); 
+                savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
+                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2'); 
             end
         end
     end    
