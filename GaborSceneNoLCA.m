@@ -155,7 +155,7 @@ for mos = 1:length(KLMSdensity)
                 save(savename, 'Result', '-append'); 
                 
                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', 'v7.3'); 
+                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', '-v7.3'); 
             end
         end
     end    
