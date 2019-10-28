@@ -73,7 +73,6 @@ if ~isfolder(resultdir)
     mkdir(resultdir);
 end
 
-pool = parpool(feature('numCores')); 
 
 for mos = 1:length(KLMSdensity)
     
