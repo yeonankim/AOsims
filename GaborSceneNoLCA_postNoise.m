@@ -62,32 +62,35 @@ ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
 sf_set = [10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
 contrast_set = 10.^linspace(log10(0.001), log10(0.03), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
 
+% Making dir to save all the simulation results
 resultdir = 'Results';
 if ~isfolder(resultdir)
     mkdir(resultdir);
 end
 
 % Making dir to save cone excitation instances
-conerespdir = 'ConeExitationInstances'; 
-if ~isfolder(parentdir)
+conerespdir = fullfile(resultdir, 'ConeExitationInstances'); 
+if ~isfolder(conerespdir)
     mkdir(conerespdir);
 end
 
-
 for mos = 1:length(KLMSdensity)
     
-    this_KLMSdensity = KLMSdensity{mos}; 
-    
-    theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-       'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
-       'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
-       'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
-       'integrationTime', 10/1000, ...             % 30 msec integration time
-       'maxGridAdjustmentIterations', 50, ...
-       'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
-   
-    savename = [resultdir, '/mosaicCond', num2str(mos), '.mat']; 
-    save(savename, 'theMosaic', 'this_KLMSdensity', 'sf_set', 'contrast_set'); 
+    savename_mosaic = fullfile(resultdir, ['mosaicCond', num2str(mos), '.mat']);
+    if isfile(savename_mosaic)
+        load(savename_mosaic);
+        fprintf('Loading file: %s', savename_mosaic);
+    else
+        this_KLMSdensity = KLMSdensity{mos};
+        theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
+            'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size
+            'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
+            'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
+            'integrationTime', 10/1000, ...             % 30 msec integration time
+            'maxGridAdjustmentIterations', 50, ...
+            'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
+        save(savename_mosaic, 'theMosaic', 'this_KLMSdensity');
+    end 
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
@@ -99,7 +102,7 @@ for mos = 1:length(KLMSdensity)
         
         for exp = 1:length(coltype_set) %**Running only for experiment 3
             
-            Result{oi, exp} = nan(nContrast, nSF); 
+%             Result{oi, exp} = nan(nContrast, nSF); 
             
             this_coltype = coltype_set{exp}; 
             this_ort     = ort_set{exp}; 
@@ -111,40 +114,50 @@ for mos = 1:length(KLMSdensity)
                 this_sf       = sf_set(condIdPerColtype(cnd, 1)); 
                 this_contrast = contrast_set(condIdPerColtype(cnd, 2)); 
                 
-                %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
-                scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
-                scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
-                % visualizeScene(scene, 'displayContrastProfiles', true);
+                savename_coneresp = fullfile(conerespdir, ['coneExcitation_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
                 
-                
-                %% Compute and visualize the retinal images with and without LCA
-                theOIscene1 = oiCompute(theOI, scene1);
-                theOIscene2 = oiCompute(theOI, scene2);
-                
-                % % Visualize the PSFs and OTFs
-                % % Visualize the PSF/OTF at 530 (in-focus)
-                % visualizedSpatialSupportArcMin = 6;
-                % visualizedSpatialSfrequencyCPD = 120;
-                % visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-                % visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-                
-                % % Visualize the optical image as an RGB image and a few spectral slices
-                % visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
-                %     'displayRetinalContrastProfiles', false);
-                % visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
-                %     'displayRetinalContrastProfiles', false);
-                
-                
-                %% Compute some instances of cone mosaic excitations
-%                 nInstancesNum = 1024;
-%                 % Zero fixational eye movements
-%                 emPath = zeros(nInstancesNum, 1, 2);
-%                 % Compute mosaic excitation responses
-%                 coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
-%                 coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
-                
-                coneExcitationsCond1 = theMosaic.compute(theOIscene1);
-                coneExcitationsCond2 = theMosaic.compute(theOIscene2);
+                if isfile(savename_coneresp)
+                    fprintf('This cone excitation instance already exists. Skipping...');
+                else
+                    
+                    %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
+                    scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
+                    scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
+                    % visualizeScene(scene, 'displayContrastProfiles', true);
+                    
+                    
+                    %% Compute and visualize the retinal images with and without LCA
+                    theOIscene1 = oiCompute(theOI, scene1);
+                    theOIscene2 = oiCompute(theOI, scene2);
+                    
+                    % % Visualize the PSFs and OTFs
+                    % % Visualize the PSF/OTF at 530 (in-focus)
+                    % visualizedSpatialSupportArcMin = 6;
+                    % visualizedSpatialSfrequencyCPD = 120;
+                    % visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                    % visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                    
+                    % % Visualize the optical image as an RGB image and a few spectral slices
+                    % visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
+                    %     'displayRetinalContrastProfiles', false);
+                    % visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
+                    %     'displayRetinalContrastProfiles', false);
+                    
+                    
+                    %% Compute some instances of cone mosaic excitations
+                    %                 nInstancesNum = 1024;
+                    %                 % Zero fixational eye movements
+                    %                 emPath = zeros(nInstancesNum, 1, 2);
+                    %                 % Compute mosaic excitation responses
+                    %                 coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
+                    %                 coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
+                    
+                    coneExcitationsCond1 = theMosaic.compute(theOIscene1);
+                    coneExcitationsCond2 = theMosaic.compute(theOIscene2);
+                    
+                    save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
+                    
+                end 
                 
 %                 % % Compute the mean response across all instances
 %                 % meanConeExcitation = mean(coneExcitationCond1,1);
