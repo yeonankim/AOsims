@@ -68,20 +68,24 @@ if ~isfolder(resultdir)
     mkdir(resultdir);
 end
 
-% Making dir to save cone excitation instances
-conerespdir = fullfile(resultdir, 'ConeExitationInstances'); 
-if ~isfolder(conerespdir)
-    mkdir(conerespdir);
-end
-
 for mos = 1:length(KLMSdensity)
     
-    savename_mosaic = fullfile(resultdir, ['mosaicCond', num2str(mos), '.mat']);
+    this_KLMSdensity = KLMSdensity{mos};
+    
+    % Making dir to save cone excitation instances
+    mosaicdir = fullfile(resultdir, ['mosaicCond', num2str(mos)]);
+    if ~isfolder(mosaicdir)
+        mkdir(mosaicdir);
+    end
+
+    savename_mosaic = fullfile(mosaicdir, ['mosaic_L', num2str(this_KLMSdensity(2)*10), ...,
+                                                  'M', num2str(this_KLMSdensity(3)*10), ...,
+                                                  'S', num2str(this_KLMSdensity(4)*10), '.mat']);
+                                              
     if isfile(savename_mosaic)
         load(savename_mosaic);
-        fprintf('Loading file: %s', savename_mosaic);
+        fprintf('Loading file: %s \n', savename_mosaic);
     else
-        this_KLMSdensity = KLMSdensity{mos};
         theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
             'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size
             'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
@@ -91,6 +95,13 @@ for mos = 1:length(KLMSdensity)
             'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
         save(savename_mosaic, 'theMosaic', 'this_KLMSdensity');
     end 
+    
+    
+    % Making dir to save cone excitation instances
+    conerespdir = fullfile(mosaicdir, 'ConeExitationInstances');
+    if ~isfolder(conerespdir)
+        mkdir(conerespdir);
+    end
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
@@ -155,6 +166,7 @@ for mos = 1:length(KLMSdensity)
                     coneExcitationsCond1 = theMosaic.compute(theOIscene1);
                     coneExcitationsCond2 = theMosaic.compute(theOIscene2);
                     
+                    fprintf('Saving %s. \n', savename_coneresp); 
                     save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
                     
                 end 

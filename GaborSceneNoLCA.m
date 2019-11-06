@@ -136,29 +136,26 @@ for mos = 1:length(KLMSdensity)
                 
                 
                 %% Compute some instances of cone mosaic excitations
-%                 nInstancesNum = 1024;
-%                 % Zero fixational eye movements
-%                 emPath = zeros(nInstancesNum, 1, 2);
-%                 % Compute mosaic excitation responses
-%                 coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
-%                 coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
+                nInstancesNum = 1024;
+                % Zero fixational eye movements
+                emPath = zeros(nInstancesNum, 1, 2);
+                % Compute mosaic excitation responses
+                coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
+                coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
                 
-                coneExcitationsCond1 = theMosaic.compute(theOIscene1);
-                coneExcitationsCond2 = theMosaic.compute(theOIscene2);
+                % % Compute the mean response across all instances
+                % meanConeExcitation = mean(coneExcitationCond1,1);
+                % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
                 
-%                 % % Compute the mean response across all instances
-%                 % meanConeExcitation = mean(coneExcitationCond1,1);
-%                 % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
-%                 
-%                 percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
-%                 
-%                 fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);                 
-%                 Result{oi, exp}(mod(cnd-1, nContrast)+1, floor((cnd-1)/nContrast)+1) = percentCorrect; 
-%                 
-%                 save(savename, 'Result', '-append'); 
-%                 
-%                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-%                 save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', '-v7.3'); 
+                percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
+                
+                fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);                 
+                Result{oi, exp}(mod(cnd-1, nContrast)+1, floor((cnd-1)/nContrast)+1) = percentCorrect; 
+                
+                save(savename, 'Result', '-append'); 
+                
+                savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
+                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', '-v7.3'); 
             end
         end
     end    
