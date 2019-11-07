@@ -174,7 +174,7 @@ for mos = 1:length(KLMSdensity)
                     parforsave(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2, SVMpercentCorrect)
                 end 
             end
-            toc
+            toc(tic)
         end
     end    
 end
