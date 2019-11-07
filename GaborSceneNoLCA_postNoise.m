@@ -113,8 +113,6 @@ for mos = 1:length(KLMSdensity)
         
         for exp = 1:length(coltype_set) %**Running only for experiment 3
             
-%             Result{oi, exp} = nan(nContrast, nSF); 
-            
             this_coltype = coltype_set{exp}; 
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 

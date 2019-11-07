@@ -53,6 +53,10 @@ sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 % slightly higer fov. 
 
 
+nworkers = feature('numCores'); 
+parpool(nworkers); 
+
+
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
 KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.9 0.1 0.0]'};%, [0.0 0.2 0.8 0.0]'};
 nSF = 3;
@@ -67,27 +71,40 @@ if ~isfolder(resultdir)
     mkdir(resultdir);
 end
 
-% Making dir to save cone excitation instances
-conerespdir = 'ConeExitationInstances'; 
-if ~isfolder(parentdir)
-    mkdir(conerespdir);
-end
-
 
 for mos = 1:length(KLMSdensity)
     
     this_KLMSdensity = KLMSdensity{mos}; 
     
-    theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
-       'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size 
-       'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
-       'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
-       'integrationTime', 10/1000, ...             % 30 msec integration time
-       'maxGridAdjustmentIterations', 50, ...
-       'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
-   
-    savename = [resultdir, '/mosaicCond', num2str(mos), '.mat']; 
-    save(savename, 'theMosaic', 'this_KLMSdensity', 'sf_set', 'contrast_set'); 
+    % Making dir to save cone excitation instances
+    mosaicdir = fullfile(resultdir, ['mosaicCond', num2str(mos)]);
+    if ~isfolder(mosaicdir)
+        mkdir(mosaicdir);
+    end
+
+    savename_mosaic = fullfile(mosaicdir, ['mosaic_L', num2str(this_KLMSdensity(2)*10), ...,
+                                                  'M', num2str(this_KLMSdensity(3)*10), ...,
+                                                  'S', num2str(this_KLMSdensity(4)*10), '.mat']);
+                                              
+    if isfile(savename_mosaic)
+        load(savename_mosaic);
+        fprintf('Loading file: %s \n', savename_mosaic);
+    else
+        theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
+            'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size
+            'eccBasedConeDensity', true, ...            % cone density varies with eccentricity
+            'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
+            'integrationTime', 10/1000, ...             % 30 msec integration time
+            'maxGridAdjustmentIterations', 50, ...
+            'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
+        save(savename_mosaic, 'theMosaic', 'this_KLMSdensity');
+    end 
+    
+    % Making dir to save cone excitation instances
+    conerespdir = fullfile(mosaicdir, 'NoisyConeExitationInstances');
+    if ~isfolder(conerespdir)
+        mkdir(conerespdir);
+    end
 
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
     
@@ -99,64 +116,70 @@ for mos = 1:length(KLMSdensity)
         
         for exp = 1:length(coltype_set) %**Running only for experiment 3
             
-            Result{oi, exp} = nan(nContrast, nSF); 
-            
             this_coltype = coltype_set{exp}; 
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 
             
-            for cnd = 1:size(condIdPerColtype, 1)
+            tic
+            parfor cnd = 1:size(condIdPerColtype, 1)
                 close all; 
                 
                 this_sf       = sf_set(condIdPerColtype(cnd, 1)); 
                 this_contrast = contrast_set(condIdPerColtype(cnd, 2)); 
                 
-                %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
-                scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
-                scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
-                % visualizeScene(scene, 'displayContrastProfiles', true);
+                savename_coneresp = fullfile(conerespdir, ['coneExcitation_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
                 
-                
-                %% Compute and visualize the retinal images with and without LCA
-                theOIscene1 = oiCompute(theOI, scene1);
-                theOIscene2 = oiCompute(theOI, scene2);
-                
-                % % Visualize the PSFs and OTFs
-                % % Visualize the PSF/OTF at 530 (in-focus)
-                % visualizedSpatialSupportArcMin = 6;
-                % visualizedSpatialSfrequencyCPD = 120;
-                % visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-                % visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
-                
-                % % Visualize the optical image as an RGB image and a few spectral slices
-                % visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
-                %     'displayRetinalContrastProfiles', false);
-                % visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
-                %     'displayRetinalContrastProfiles', false);
-                
-                
-                %% Compute some instances of cone mosaic excitations
-                nInstancesNum = 1024;
-                % Zero fixational eye movements
-                emPath = zeros(nInstancesNum, 1, 2);
-                % Compute mosaic excitation responses
-                coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
-                coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
-                
-                % % Compute the mean response across all instances
-                % meanConeExcitation = mean(coneExcitationCond1,1);
-                % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
-                
-                percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
-                
-                fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);                 
-                Result{oi, exp}(mod(cnd-1, nContrast)+1, floor((cnd-1)/nContrast)+1) = percentCorrect; 
-                
-                save(savename, 'Result', '-append'); 
-                
-                savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-                save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', '-v7.3'); 
+                if isfile(savename_coneresp)
+                    fprintf('This cone excitation instance already exists. Skipping...');
+                else
+                    %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
+                    scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
+                    scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
+                    % visualizeScene(scene, 'displayContrastProfiles', true);
+                    
+                    
+                    %% Compute and visualize the retinal images with and without LCA
+                    theOIscene1 = oiCompute(theOI, scene1);
+                    theOIscene2 = oiCompute(theOI, scene2);
+                    
+                    % % Visualize the PSFs and OTFs
+                    % % Visualize the PSF/OTF at 530 (in-focus)
+                    % visualizedSpatialSupportArcMin = 6;
+                    % visualizedSpatialSfrequencyCPD = 120;
+                    % visualizeOptics(theOIscene1, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                    % visualizeOptics(theOIscene2, accommodatedWavelength, visualizedSpatialSupportArcMin, visualizedSpatialSfrequencyCPD);
+                    
+                    % % Visualize the optical image as an RGB image and a few spectral slices
+                    % visualizeOpticalImage(theOIscene1, 'displayRadianceMaps', false, ...
+                    %     'displayRetinalContrastProfiles', false);
+                    % visualizeOpticalImage(theOIscene2, 'displayRadianceMaps', false, ...
+                    %     'displayRetinalContrastProfiles', false);
+                    
+                    
+                    %% Compute some instances of cone mosaic excitations
+                    nInstancesNum = 1;
+                    % Zero fixational eye movements
+                    emPath = zeros(nInstancesNum, 1, 2);
+                    % Compute mosaic excitation responses
+                    coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
+                    coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
+                    
+                    % % Compute the mean response across all instances
+                    % meanConeExcitation = mean(coneExcitationCond1,1);
+                    % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
+                    
+                    SVMpercentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
+                    
+                    fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);
+                    parforsave(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2, SVMpercentCorrect)
+                end 
             end
+            toc
         end
     end    
 end
+
+
+function parforsave(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2, SVMpercentCorrect)
+save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2', 'SVMpercentCorrect', '-v7.3');
+end 
