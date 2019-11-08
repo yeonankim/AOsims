@@ -120,7 +120,7 @@ for mos = 1:length(KLMSdensity)
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 
             
-            tic
+            t_start = tic; 
             parfor cnd = 1:size(condIdPerColtype, 1)
                 close all; 
                 
@@ -170,11 +170,11 @@ for mos = 1:length(KLMSdensity)
                     
                     SVMpercentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
                     
-                    fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);
+                    fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, SVMpercentCorrect]);
                     parforsave(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2, SVMpercentCorrect)
                 end 
             end
-            toc(tic)
+            toc(t_start)
         end
     end    
 end

@@ -92,7 +92,8 @@ for mos = 1:length(KLMSdensity)
             'eccBasedConeQuantalEfficiency', true, ...  % cone quantal efficiency varies with eccentricity
             'integrationTime', 10/1000, ...             % 30 msec integration time
             'maxGridAdjustmentIterations', 50, ...
-            'spatialDensity', this_KLMSdensity);        % terminate iterative lattice adjustment after 50 iterations
+            'spatialDensity', this_KLMSdensity, ...     % terminate iterative lattice adjustment after 50 iterations
+            'noiseFlag', 'none');
         save(savename_mosaic, 'theMosaic', 'this_KLMSdensity');
     end 
     
@@ -164,8 +165,7 @@ for mos = 1:length(KLMSdensity)
                     coneExcitationsCond1 = theMosaic.compute(theOIscene1);
                     coneExcitationsCond2 = theMosaic.compute(theOIscene2);
                     
-                    fprintf('Saving %s. \n', savename_coneresp); 
-                    save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
+                    saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2)
                     
                 end 
                 
@@ -186,3 +186,12 @@ for mos = 1:length(KLMSdensity)
         end
     end    
 end
+
+
+
+function saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2)
+
+fprintf('Saving %s. \n', savename_coneresp);
+save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
+
+end 
