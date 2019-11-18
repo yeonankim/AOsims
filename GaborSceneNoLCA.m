@@ -53,9 +53,8 @@ sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 % slightly higer fov. 
 
 
-nworkers = feature('numCores'); 
-parpool(nworkers); 
-
+% nworkers = feature('numCores'); 
+% parpool(nworkers); 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
 KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.9 0.1 0.0]'};%, [0.0 0.2 0.8 0.0]'};
@@ -70,7 +69,6 @@ resultdir = 'Results';
 if ~isfolder(resultdir)
     mkdir(resultdir);
 end
-
 
 for mos = 1:length(KLMSdensity)
     
@@ -130,17 +128,19 @@ for mos = 1:length(KLMSdensity)
                 savename_coneresp = fullfile(conerespdir, ['coneExcitation_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
                 
                 if isfile(savename_coneresp)
-                    fprintf('This cone excitation instance already exists. Skipping...');
+                    fprintf('This cone excitation instance already exists. Skipping... \n');
                 else
+                    
                     %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
                     scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
+                    theOIscene1 = oiCompute(theOI, scene1);
+                    
                     scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
+                    theOIscene2 = oiCompute(theOI, scene2);
+                    
                     % visualizeScene(scene, 'displayContrastProfiles', true);
                     
-                    
                     %% Compute and visualize the retinal images with and without LCA
-                    theOIscene1 = oiCompute(theOI, scene1);
-                    theOIscene2 = oiCompute(theOI, scene2);
                     
                     % % Visualize the PSFs and OTFs
                     % % Visualize the PSF/OTF at 530 (in-focus)
@@ -157,7 +157,7 @@ for mos = 1:length(KLMSdensity)
                     
                     
                     %% Compute some instances of cone mosaic excitations
-                    nInstancesNum = 1;
+                    nInstancesNum = 1024;
                     % Zero fixational eye movements
                     emPath = zeros(nInstancesNum, 1, 2);
                     % Compute mosaic excitation responses

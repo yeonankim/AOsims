@@ -118,16 +118,16 @@ for mos = 1:length(KLMSdensity)
             this_ort     = ort_set{exp}; 
             fprintf('Experimental condition %d. \n', exp); 
             
-            for cnd = 1:size(condIdPerColtype, 1)
+            parfor cnd = 1:size(condIdPerColtype, 1)
                 close all; 
                 
                 this_sf       = sf_set(condIdPerColtype(cnd, 1)); 
                 this_contrast = contrast_set(condIdPerColtype(cnd, 2)); 
                 
-                savename_coneresp = fullfile(conerespdir, ['coneExcitation_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
+                savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
                 
                 if isfile(savename_coneresp)
-                    fprintf('This cone excitation instance already exists. Skipping...');
+                    fprintf('This cone excitation instance already exists. Skipping... \n');
                 else
                     
                     %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
