@@ -87,6 +87,10 @@ for mos = 1:length(KLMSdensity)
     if isfile(savename_mosaic)
         load(savename_mosaic);
         fprintf('Loading file: %s \n', savename_mosaic);
+        if ~strcmp(theMosaic.noiseFlag, 'random')
+            fprintf('The noiseFlag of this mosaic is set to %s. Turning on random noise. /n', theMosaic.noiseFlag); 
+            theMosaic.noiseFlag = 'random'; 
+        end 
     else
         theMosaic = coneMosaicHex(5, ...               % hex lattice sampling factor
             'fovDegs', sceneFov, ...                    % match mosaic width to stimulus size
