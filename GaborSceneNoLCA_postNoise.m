@@ -131,7 +131,10 @@ for mos = 1:length(KLMSdensity)
                 savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
                 
                 if isfile(savename_coneresp)
-                    load(savename_coneresp);
+                    stemp = load(savename_coneresp);
+                    coneExcitationsCond1 = stemp.coneExcitationsCond1; 
+                    coneExcitationsCond2 = stemp.coneExcitationsCond2; 
+                    delete stemp; 
                     fprintf('This cone excitation instance already exists. Skip computing... \n');
                 else
                     
