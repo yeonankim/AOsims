@@ -133,8 +133,7 @@ for mos = 1:length(KLMSdensity)
                 if isfile(savename_coneresp)
                     stemp = load(savename_coneresp);
                     coneExcitationsCond1 = stemp.coneExcitationsCond1; 
-                    coneExcitationsCond2 = stemp.coneExcitationsCond2; 
-                    delete stemp; 
+                    coneExcitationsCond2 = stemp.coneExcitationsCond2;
                     fprintf('This cone excitation instance already exists. Skip computing... \n');
                 else
                     
