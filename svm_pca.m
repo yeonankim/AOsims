@@ -12,19 +12,19 @@ taskIntervals = 2;
 pcComponentsNumForClassification = 40;
 classificationMatrixProjection = classificationMatrix * pcVectors(:,1:pcComponentsNumForClassification);
 
-% Visualize the classification matrix and its projection to the PC space
-visualizeClassificationMatrices(classificationMatrix, classificationMatrixProjection, taskIntervals);
+% % Visualize the classification matrix and its projection to the PC space
+% visualizeClassificationMatrices(classificationMatrix, classificationMatrixProjection, taskIntervals);
 
 % Visualize the first 4 principal components. Note that only the first
 % component contains some structure, which resembles the stimulus to be detected.
-visualizePrincipalComponents(pcVectors, varianceExplained, theMosaic);
+% visualizePrincipalComponents(pcVectors, varianceExplained, theMosaic);
 
 % Train a binary SVM classifier and visualize the support vectors in 2
 % dimensions
 svm = fitcsvm(classificationMatrixProjection,classLabels);
 
-% Visualize the data along with the hyperplane computed by the SVM 
-visualizeSVMmodel(svm, classificationMatrixProjection, classLabels);
+% % Visualize the data along with the hyperplane computed by the SVM 
+% visualizeSVMmodel(svm, classificationMatrixProjection, classLabels);
 
 % Perform a 10-fold cross-validation on the trained SVM model
 kFold = 10;

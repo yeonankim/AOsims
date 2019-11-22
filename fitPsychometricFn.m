@@ -1,3 +1,5 @@
+function [contrastSensitivity, contrastThreshold] = fitPsychometricFn(contrasts, dat)
+
 %% *Introductory script illustrating how to fit a Weibul function to psychometric data (performance as a function of stimulus contrast)*
 % _This tutorial fits a cumulative Weibull function to a psychometric dataset 
 % using the Palamedes toolbox._
@@ -11,12 +13,11 @@
 % Load exemplar data
 % [contrasts, fractionCorrect, nTrials] = loadPerformanceData('ExemplarPsychometricFunction');
 
-contrasts = linspace(0.001, 0.05, 6)'; 
-fractionCorrect = D(:,1)/100; 
+fractionCorrect = dat./100; 
 nTrials = 32; 
 
-% Plot the data
-plotPsychometricFunction('raw data', contrasts, fractionCorrect, [],[], [], []);
+% % Plot the data
+% plotPsychometricFunction('raw data', contrasts, fractionCorrect, [],[], [], []);
 %% *Step 2a.* Set up params and options for Palamedes fitting
 
 % Set up psychometric function model. Here we use a cumulative Weibull function
@@ -51,8 +52,8 @@ paramsValues = PAL_PFML_Fit(contrasts(:), trialsNumCorrectPerContrastLevel(:), t
         
 % Obtain the threshold at which performance cross a threshold performance, here 71%
 performanceThreshold = 0.71;
-contrastThreshold = psychometricFunctionModel(paramsValues, performanceThreshold, 'inverse')
-contrastSensitivity = 1/contrastThreshold
+contrastThreshold = psychometricFunctionModel(paramsValues, performanceThreshold, 'inverse');
+contrastSensitivity = 1/contrastThreshold;
 %% *Step 2c. Visualize fitted function*
 
 % Obtain a high resolution version of the fitted function
@@ -63,6 +64,7 @@ hiResPerformance = PAL_Weibull(paramsValues, hiResContrasts);
 plotPsychometricFunction('fitted data', contrasts, fractionCorrect, hiResContrasts, hiResPerformance, contrastThreshold, performanceThreshold);
 %% 
 
+end 
 
 % function [contrasts, fractionCorrect, nTrials] = loadPerformanceData(filename)
 %     rootDir = tbLocateProject('ISETBioLiveScript');

@@ -1,4 +1,4 @@
-clear all; 
+clear all;
 close all;
 
 %% Parameters
@@ -11,19 +11,19 @@ wave = (400:10:700)';
 accommodatedWavelength = 530;
 zCoeffs = zeros(66,1);
 
-LCAoff = true; 
-opticsName = 'human-wvf-withlca'; 
+LCAoff = true;
+opticsName = 'human-wvf-withlca';
 
 
 %% Set up wavefront optics object
 % Compute pupil function using 'no lca' key/value pair to turn off LCA.
 % You can turn it back on to compare the effect.
 wvfP = wvfCreate('calc wavelengths', wave, ...
-                 'zcoeffs', zCoeffs, ...
-                 'measured pupil size', pupilDiameterMm, ...
-                 'calc pupil size', pupilDiameterMm, ...
-                 'measured wavelength', accommodatedWavelength, ...
-                 'name', sprintf('human-%d', pupilDiameterMm));
+    'zcoeffs', zCoeffs, ...
+    'measured pupil size', pupilDiameterMm, ...
+    'calc pupil size', pupilDiameterMm, ...
+    'measured wavelength', accommodatedWavelength, ...
+    'name', sprintf('human-%d', pupilDiameterMm));
 % Deal with best focus by specifying that the wavefront parameters
 % were measured at the wavelength we want to say is in focus. This
 % is a little bit of a hack but seems OK for the diffraction limited case
@@ -36,7 +36,7 @@ wvfP = wvfComputePupilFunction(wvfP,false,'no lca', LCAoff);
 wvfP = wvfComputePSF(wvfP);
 theOI = wvf2oi(wvfP);
 optics = oiGet(theOI, 'optics');
-if LCAoff; opticsName = 'human-wvf-nolca'; end  
+if LCAoff; opticsName = 'human-wvf-nolca'; end
 optics = opticsSet(optics, 'model', 'shift invariant', 'name', opticsName);
 theOI = oiSet(theOI,'optics',optics);
 
@@ -46,11 +46,11 @@ theOI_control = oiCreate('wvf human');
 %% Create the scene
 presentationDisplay = displayCreate('AOSim-Seattle');
 
-scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation 
+scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation
 sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 % ok, if this value is smaller than that size of the scene, the mosaic
 % generation gets error. Here as a quick remedy artificially giving a
-% slightly higer fov. 
+% slightly higer fov.
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
@@ -77,11 +77,11 @@ for mos = 1:length(KLMSdensity)
     if ~isfolder(mosaicdir)
         mkdir(mosaicdir);
     end
-
+    
     savename_mosaic = fullfile(mosaicdir, ['mosaic_L', num2str(this_KLMSdensity(2)*10), ...,
-                                                  'M', num2str(this_KLMSdensity(3)*10), ...,
-                                                  'S', num2str(this_KLMSdensity(4)*10), '.mat']);
-                                              
+        'M', num2str(this_KLMSdensity(3)*10), ...,
+        'S', num2str(this_KLMSdensity(4)*10), '.mat']);
+    
     if isfile(savename_mosaic)
         load(savename_mosaic);
         fprintf('Loading file: %s \n', savename_mosaic);
@@ -99,7 +99,7 @@ for mos = 1:length(KLMSdensity)
             'spatialDensity', this_KLMSdensity, ...     % terminate iterative lattice adjustment after 50 iterations
             'noiseFlag', 'none');
         save(savename_mosaic, 'theMosaic', 'this_KLMSdensity');
-    end 
+    end
     
     
     % Making dir to save cone excitation instances
@@ -107,28 +107,28 @@ for mos = 1:length(KLMSdensity)
     if ~isfolder(conerespdir)
         mkdir(conerespdir);
     end
-
-    condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1]; 
+    
+    condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1];
     
     for oi = 1 %1:2 **Running only for AO setup
         if oi == 2
-            theOI = theOI_control; 
-            disp('Now using the control OI.'); 
-        end 
+            theOI = theOI_control;
+            disp('Now using the control OI.');
+        end
         
         for exp = 1:length(coltype_set) %**Running only for experiment 3
             
-            this_coltype = coltype_set{exp}; 
-            this_ort     = ort_set{exp}; 
-            fprintf('Experimental condition %d. \n', exp); 
+            this_coltype = coltype_set{exp};
+            this_ort     = ort_set{exp};
+            fprintf('Experimental condition %d. \n', exp);
             
             parfor cnd = 1:size(condIdPerColtype, 1)
-                close all; 
+                close all;
                 
-                this_sf       = sf_set(condIdPerColtype(cnd, 1)); 
-                this_contrast = contrast_set(condIdPerColtype(cnd, 2)); 
+                this_sf       = sf_set(condIdPerColtype(cnd, 1));
+                this_contrast = contrast_set(condIdPerColtype(cnd, 2));
                 
-                savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']); 
+                savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
                 
                 if isfile(savename_coneresp)
                     fprintf('This cone excitation instance already exists. Skipping... \n');
@@ -158,39 +158,31 @@ for mos = 1:length(KLMSdensity)
                     %     'displayRetinalContrastProfiles', false);
                     
                     
-                    %% Compute some instances of cone mosaic excitations
-                    %                 nInstancesNum = 1024;
-                    %                 % Zero fixational eye movements
-                    %                 emPath = zeros(nInstancesNum, 1, 2);
-                    %                 % Compute mosaic excitation responses
-                    %                 coneExcitationsCond1 = theMosaic.compute(theOIscene1, 'emPath', emPath);
-                    %                 coneExcitationsCond2 = theMosaic.compute(theOIscene2, 'emPath', emPath);
-                    
+                    %% Compute the mean cone excitation responses to the stimulus
                     coneExcitationsCond1 = theMosaic.compute(theOIscene1);
                     coneExcitationsCond2 = theMosaic.compute(theOIscene2);
                     
                     saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2)
                     
-                end 
+                end
                 
-%                 % % Compute the mean response across all instances
-%                 % meanConeExcitation = mean(coneExcitationCond1,1);
-%                 % visualizeConeMosaicResponses(theMosaic, coneExcitationCond1, 'R*/cone/tau');
-%                 
-%                 percentCorrect = svm_pca(theMosaic, coneExcitationsCond1, coneExcitationsCond2);
-%                 
-%                 fprintf('SF %f, Contrast %f: %f \n', [this_sf, this_contrast, percentCorrect]);                 
-%                 Result{oi, exp}(mod(cnd-1, nContrast)+1, floor((cnd-1)/nContrast)+1) = percentCorrect; 
-%                 
-%                 save(savename, 'Result', '-append'); 
-%                 
-%                 savename_coneInst = [parentdir, '/mosaicCond_', num2str(mos), '_oiCond_', num2str(oi), '_exp_', num2str(exp)]; 
-%                 save(savename_coneInst, 'coneExcitationsCond1', 'coneExcitationsCond2', '-v7.3'); 
+                [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
+                SVMpercentCorrect = svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances);
+                saveparfor_svm(savename_coneresp, SVMpercentCorrect);
+                
             end
         end
-    end    
+    end
 end
 
+function [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2)
+% Compute some noisy instances of cone mosaic excitations
+nInstances = 1024;
+for i = 1:nInstances
+    coneExcitationCond1_noisyInstances(i,:,:) = poissrnd(coneExcitationsCond1);
+    coneExcitationCond2_noisyInstances(i,:,:) = poissrnd(coneExcitationsCond2);
+end
+end
 
 
 function saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2)
@@ -198,4 +190,12 @@ function saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond
 fprintf('Saving %s. \n', savename_coneresp);
 save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
 
-end 
+end
+
+
+function saveparfor_svm(savename_coneresp, SVMpercentCorrect)
+
+fprintf('%s: %.2f \n', savename_coneresp, SVMpercentCorrect);
+save(savename_coneresp, 'SVMpercentCorrect', '-append');
+
+end
