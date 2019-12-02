@@ -20,12 +20,12 @@ for sub = 1:length(pathList)
     for f = 1:length(files_coneresp)
         
         curr_filename = fullfile(files_coneresp(f).folder, files_coneresp(f).name); 
-        load(curr_filename);
+        load(curr_filename, 'SVMpercentCorrect')
         
         % Computing the sesntivitiy
         result_svm(f) = SVMpercentCorrect; % memory of SVM
         if mod(f, nContrast) == 0
-%             val_exp = extractBetween(s, 'coneExcitation_noiseOff_', '_SF');
+%             val_exp = cell2mat(extractBetween(files_coneresp(f).name, 'coneExcitation_noiseOff_', '_SF'));
             val_exp = cell2mat(extractBetween(files_coneresp(f).name, 'coneExcitation_', '_SF'));
             val_sf = cell2mat(extractBetween(files_coneresp(f).name, 'SF_', '_contr'));
             val_sensitivity = fitPsychometricFn(contrasts, result_svm(f-5:f));
