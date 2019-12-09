@@ -103,7 +103,7 @@ for mos = 1:length(KLMSdensity)
     end 
     
     % Making dir to save cone excitation instances
-    conerespdir = fullfile(mosaicdir, 'NoisyConeExitationInstances');
+    conerespdir = fullfile(mosaicdir, 'NoisyConeExcitationInstances');
     if ~isfolder(conerespdir)
         mkdir(conerespdir);
     end
