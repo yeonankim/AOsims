@@ -1,11 +1,11 @@
-function getSensitivity_macro(parentpath)
+function getSensitivity_macro(parentpath, foldername)
 
 rng; 
 
 % Get all folder names in the 'Results' directory
 d = dir(parentpath);
 isub = [d(:).isdir]; %# returns logical vector
-subFolders = {d(isub).name}'; 
+subFolders = {d(isub).name}';
 subFolders(ismember(subFolders,{'.','..'})) = []; 
 
 pathList = fullfile(parentpath, subFolders);
@@ -13,12 +13,10 @@ pathList = fullfile(parentpath, subFolders);
 for sub = 1:length(pathList)
     
     curr_path = pathList{sub};
-
-    files_coneresp = dir(fullfile(curr_path, 'ConeExcitationInstances', '*.mat'));
-%     files_coneresp = dir(fullfile(curr_path, 'NoisyConeExcitationInstances', '*.mat'));
+    files_coneresp = dir(fullfile(curr_path, foldername, '*.mat'));    
 
     for f = 1:length(files_coneresp)
-        exp_list(f) = str2double(cell2mat(extractBetween(files_coneresp(f).name, 'coneExcitation_noiseOff_exp', '_SF'))); 
+        exp_list(f) = str2double(cell2mat(extractBetween(files_coneresp(f).name, '_exp', '_SF'))); 
         sf_list(f) = str2double(cell2mat(extractBetween(files_coneresp(f).name, 'SF_', '_contr'))); 
         contrast_list(f) = str2double(cell2mat(extractBetween(files_coneresp(f).name, '_contr_', '.mat'))); 
     end
@@ -28,12 +26,10 @@ for sub = 1:length(pathList)
     
     result_svm = nan(nSF, nContrast, nEXP); 
     for f = 1:length(files_coneresp)
-        
         curr_filename = fullfile(files_coneresp(f).folder, files_coneresp(f).name); 
         load(curr_filename, 'SVMpercentCorrect'); 
         
-        val_exp = str2double(cell2mat(extractBetween(files_coneresp(f).name, 'coneExcitation_noiseOff_exp', '_SF')));
-%         val_exp = str2double(cell2mat(extractBetween(files_coneresp(f).name, 'coneExcitation_exp', '_SF')));
+        val_exp = str2double(cell2mat(extractBetween(files_coneresp(f).name, '_exp', '_SF')));
         val_sf = str2double(cell2mat(extractBetween(files_coneresp(f).name, 'SF_', '_contr'))); 
         val_contrast = str2double(cell2mat(extractBetween(files_coneresp(f).name, '_contr_', '.mat'))); 
         
@@ -42,7 +38,8 @@ for sub = 1:length(pathList)
     
     for i = 1:nEXP
         for j = 1:nSF
-            val_sensitivity = fitPsychometricFn(contrasts(~isnan(result_svm(j,:,i))), result_svm(j,:,i));
+            col_valid = ~isnan(result_svm(j,:,i));
+            val_sensitivity = fitPsychometricFn(contrasts(col_valid), result_svm(j,col_valid,i));
             fprintf('EXP%d SF%f: %f \n', EXPs(i), SFs(j), val_sensitivity); 
         end
     end

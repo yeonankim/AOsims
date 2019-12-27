@@ -9,7 +9,7 @@ taskIntervals = 2;
 [pcVectors, ~, ~, ~,varianceExplained] = pca(classificationMatrix);
 
 % Project the responses onto the space formed by the first 4 PC vectors
-pcComponentsNumForClassification = 40;
+pcComponentsNumForClassification = 60;
 classificationMatrixProjection = classificationMatrix * pcVectors(:,1:pcComponentsNumForClassification);
 
 % % Visualize the classification matrix and its projection to the PC space

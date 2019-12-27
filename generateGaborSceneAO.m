@@ -6,11 +6,11 @@ function scene = generateGaborSceneAO(display, coltype, ort, sf, contrast)
 %% HERE'S THE ACTUAL MAKE-GRAITNG PART
 TCA = [0, 0]; 
 
-% load('gamma_data.mat')
+load('gamma_data.mat'); 
 % load('LuminousEfficiencyFunction.mat')
-% inverted_gamma_params = GammaCorrection(gamma_data);
+inverted_gamma_params = GammaCorrection(gamma_data);
 % % RGLuminanceScaling = ScaleRGIntensity(Wavelength, LuminousEfficiencyFunction, R0Intensity, G0Intensity, R255Intensity, G255Intensity);
-% RGLuminanceScaling = 1;
+RGLuminanceScaling = 1;
 % 
 % BackgroundCol = [0.5, 0.5, 0];
 % correctedBackgroundColBit = CorrectGammaBitRG(BackgroundCol, inverted_gamma_params, RGLuminanceScaling);
@@ -29,7 +29,7 @@ stim_plane_green = contrast * stim.G / 2 + 0.5;
 stim = repmat(zeros(size(stim_plane_red)), [1 1 3]);
 stim(:,:,1) = stim_plane_red;
 stim(:,:,2) = stim_plane_green;
-% stim1 = CorrectGammaBitTXTRG(stim1, inverted_gamma_params, RGLuminanceScaling);
+stim = CorrectGammaBitTXTRG(stim, inverted_gamma_params, RGLuminanceScaling);
 
 scene = sceneFromFile(stim, 'rgb', [], display);
 

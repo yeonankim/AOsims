@@ -44,7 +44,7 @@ theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
-presentationDisplay = displayCreate('AOSim-Seattle');
+presentationDisplay = displayCreate('AOSim-Seattle_SPDcorrected');
 
 scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation
 sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
@@ -54,13 +54,20 @@ sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
+%-------------------------------------------------%
+foldername = 'ConeExcitationInstances_pca60_nInstances1024';
 KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.9 0.1 0.0]'};%, [0.0 0.2 0.8 0.0]'};
 nSF = 3;
-nContrast = 6;
+nContrast = 25; %15;
 coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
 ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
 sf_set = [10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
-contrast_set = 10.^linspace(log10(0.001), log10(0.03), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
+contrast_set = 10.^linspace(log10(0.001), log10(0.05), nContrast); %10.^linspace(log10(0.03), log10(0.1), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
+% contrast_set = contrast_set(2:end);
+% nContrast = nContrast-1; 
+nSVMrep = 10; 
+%-------------------------------------------------%
+
 
 % Making dir to save all the simulation results
 resultdir = 'Results';
@@ -79,8 +86,8 @@ for mos = 1:length(KLMSdensity)
     end
     
     savename_mosaic = fullfile(mosaicdir, ['mosaic_L', num2str(this_KLMSdensity(2)*10), ...,
-        'M', num2str(this_KLMSdensity(3)*10), ...,
-        'S', num2str(this_KLMSdensity(4)*10), '.mat']);
+                                                  'M', num2str(this_KLMSdensity(3)*10), ...,
+                                                  'S', num2str(this_KLMSdensity(4)*10), '.mat']);
     
     if isfile(savename_mosaic)
         load(savename_mosaic);
@@ -103,20 +110,20 @@ for mos = 1:length(KLMSdensity)
     
     
     % Making dir to save cone excitation instances
-    conerespdir = fullfile(mosaicdir, 'ConeExcitationInstances');
+    conerespdir = fullfile(mosaicdir, foldername);
     if ~isfolder(conerespdir)
         mkdir(conerespdir);
     end
     
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1];
     
-    for oi = 1 %1:2 **Running only for AO setup
+    for oi = 1:2
         if oi == 2
             theOI = theOI_control;
             disp('Now using the control OI.');
         end
         
-        for exp = 1:length(coltype_set) %**Running only for experiment 3
+        for exp = 1:length(coltype_set) 
             
             this_coltype = coltype_set{exp};
             this_ort     = ort_set{exp};
@@ -128,7 +135,7 @@ for mos = 1:length(KLMSdensity)
                 this_sf       = sf_set(condIdPerColtype(cnd, 1));
                 this_contrast = contrast_set(condIdPerColtype(cnd, 2));
                 
-                savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
+                savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_oi', num2str(oi), '_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
                 
                 if isfile(savename_coneresp)
                     stemp = load(savename_coneresp);
@@ -140,6 +147,7 @@ for mos = 1:length(KLMSdensity)
                     %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
                     scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
                     scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
+%                     scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, 0);
                     % visualizeScene(scene, 'displayContrastProfiles', true);
                     
                     
@@ -165,13 +173,17 @@ for mos = 1:length(KLMSdensity)
                     coneExcitationsCond1 = theMosaic.compute(theOIscene1);
                     coneExcitationsCond2 = theMosaic.compute(theOIscene2);
                     
-                    saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2)
+                    saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2); 
                     
                 end
                 
+                randomSeed = rng;
                 [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
-                SVMpercentCorrect = svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances);
-                saveparfor_svm(savename_coneresp, SVMpercentCorrect);
+                SVMpercentCorrect = [];
+                for rep = 1:nSVMrep
+                    SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
+                end
+                saveparfor_svm(savename_coneresp, randomSeed, SVMpercentCorrect);
                 
             end
         end
@@ -179,12 +191,18 @@ for mos = 1:length(KLMSdensity)
 end
 
 function [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2)
+
 % Compute some noisy instances of cone mosaic excitations
 nInstances = 1024;
+[nr1, nc1] = size(coneExcitationsCond1);
+[nr2, nc2] = size(coneExcitationsCond2);
+coneExcitationCond1_noisyInstances = nan(nInstances, nr1, nc1); 
+coneExcitationCond2_noisyInstances = nan(nInstances, nr2, nc2); 
 for i = 1:nInstances
     coneExcitationCond1_noisyInstances(i,:,:) = poissrnd(coneExcitationsCond1);
     coneExcitationCond2_noisyInstances(i,:,:) = poissrnd(coneExcitationsCond2);
 end
+
 end
 
 
@@ -195,10 +213,9 @@ save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
 
 end
 
-
-function saveparfor_svm(savename_coneresp, SVMpercentCorrect)
+function saveparfor_svm(savename_coneresp, randSeed, SVMpercentCorrect)
 
 fprintf('%s: %.2f \n', savename_coneresp, SVMpercentCorrect);
-save(savename_coneresp, 'SVMpercentCorrect', '-append');
+save(savename_coneresp, 'randSeed', 'SVMpercentCorrect', '-append');
 
 end
