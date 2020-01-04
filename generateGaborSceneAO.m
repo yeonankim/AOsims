@@ -1,4 +1,4 @@
-function scene = generateGaborSceneAO(display, coltype, ort, sf, contrast)
+function [scene, I, linearizedI] = generateGaborSceneAO(display, coltype, ort, sf, cont)
 
 % coltype: 1 -- color, 0 -- black white
 % ort: 1 -- vertical, 0 -- horizontal
@@ -22,16 +22,23 @@ StimulusSizeInPix = StimulusSizePerDegree * FOV;
 GaussianConstant = 4;
 current_SpatialFrequency_pixel = sf / StimulusSizePerDegree;
 
-stim = makeGrating (StimulusSizeInPix, ort * 90 + round(rand) * 180, current_SpatialFrequency_pixel, 0, GaussianConstant, TCA, coltype);
+stim = makeGrating (StimulusSizeInPix, ort * 90, current_SpatialFrequency_pixel, 0, GaussianConstant, TCA, coltype);
 
-stim_plane_red = contrast * stim.R / 2 + 0.5;
-stim_plane_green = contrast * stim.G / 2 + 0.5;
+if length(cont) == 1
+    stim_plane_red = cont * stim.R / 2 + 0.5;
+    stim_plane_green = cont * stim.G / 2 + 0.5;
+elseif length(cont) == 2
+    stim_plane_red = cont(1) * stim.R / 2 + 0.5;
+    stim_plane_green = cont(2) * stim.G / 2 + 0.5;
+else 
+    error('Too many values for the image contrast!');
+end 
 stim = repmat(zeros(size(stim_plane_red)), [1 1 3]);
 stim(:,:,1) = stim_plane_red;
 stim(:,:,2) = stim_plane_green;
 stim = CorrectGammaBitTXTRG(stim, inverted_gamma_params, RGLuminanceScaling);
 
-scene = sceneFromFile(stim, 'rgb', [], display);
+[scene, I, linearizedI] = sceneFromFile(stim, 'rgb', [], display);
 
 % figure; 
 % imshow(stim);
