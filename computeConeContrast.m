@@ -26,26 +26,20 @@ map_m = map_lms(:,:,2);
 if max(unique(map_l(loc_r))) >= max(unique(map_l(loc_g)))
     L_r = max(unique(map_l(loc_r))); 
     L_g = min(unique(map_l(loc_g))); 
-%     Lcont = (L_r - L_g)/((L_r + L_g) * 0.5)
-    L_cont = (L_r - L_g)/(L_r + L_g) 
+    L_cont = (L_r - L_g)/(L_r + L_g);
 else
     L_r = min(unique(map_l(loc_r)));
     L_g = max(unique(map_l(loc_g))); 
-%     Lcont = (L_g - L_r)/((L_r + L_g) * 0.5)
-    L_cont = (L_g - L_r)/(L_r + L_g) 
+    L_cont = (L_g - L_r)/(L_r + L_g);
 end
 if max(unique(map_m(loc_g))) >= max(unique(map_m(loc_r)))
     M_g = max(unique(map_m(loc_g))); 
     M_r = min(unique(map_m(loc_r))); 
-%     Mcont = (M_g - M_r)/((M_g + M_r) * 0.5)
-    M_cont = (M_g - M_r)/(M_g + M_r)
+    M_cont = (M_g - M_r)/(M_g + M_r);
 else
     M_g = min(unique(map_m(loc_g)));
     M_r = max(unique(map_m(loc_r))); 
-%     Mcont = (M_r - M_g)/((M_g + M_r) * 0.5)
-    M_cont = (M_r - M_g)/(M_g + M_r)
+    M_cont = (M_r - M_g)/(M_g + M_r);
 end
-% L_cont = max(map_l(loc_r)) / (max(map_l(loc_r)) + min(map_l(loc_g)))
-% M_cont = max(map_m(loc_g)) / (max(map_m(loc_g)) + min(map_m(loc_r))) 
 
 end 
