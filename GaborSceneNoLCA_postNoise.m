@@ -136,9 +136,10 @@ for mos = 1:length(KLMSdensity)
                 savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_oi', num2str(oi), '_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
                 
                 if isfile(savename_coneresp)
-                    stemp = load(savename_coneresp);
-                    coneExcitationsCond1 = stemp.coneExcitationsCond1; 
-                    coneExcitationsCond2 = stemp.coneExcitationsCond2;
+%                     stemp = load(savename_coneresp);
+%                     coneExcitationsCond1 = stemp.coneExcitationsCond1; 
+%                     coneExcitationsCond2 = stemp.coneExcitationsCond2;
+                    load(savename_coneresp);
                     fprintf('This cone excitation instance already exists. Skip computing... \n');
                 else
                     
@@ -175,13 +176,21 @@ for mos = 1:length(KLMSdensity)
                     
                 end
                 
-                randomSeed = rng;
-                [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
-                SVMpercentCorrect = [];
-                for rep = 1:nSVMrep
+                if exist('SVMpercentCorrect', 'var')
+                    nsvmqueue = length(SVMpercentCorrect);
+                    rng(randomSeed);
+                else 
+                    nsvmqueue = 1; 
+                    randomSeed = rng;
+                    saveparfor_rseed(savename_coneresp, randSeed)
+                    [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
+                    SVMpercentCorrect = [];
+                end 
+                
+                for rep = nsvmqueue:nSVMrep
                     SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
                 end
-                saveparfor_svm(savename_coneresp, randomSeed, SVMpercentCorrect);
+                saveparfor_svm(savename_coneresp, SVMpercentCorrect);
                 
             end
         end
@@ -211,9 +220,15 @@ save(savename_coneresp, 'coneExcitationsCond1', 'coneExcitationsCond2');
 
 end
 
-function saveparfor_svm(savename_coneresp, randSeed, SVMpercentCorrect)
+function saveparfor_rseed(savename_coneresp, randSeed)
+
+save(savename_coneresp, 'randSeed', '-append');
+
+end
+
+function saveparfor_svm(savename_coneresp, SVMpercentCorrect)
 
 fprintf('%s: %.2f \n', savename_coneresp, SVMpercentCorrect);
-save(savename_coneresp, 'randSeed', 'SVMpercentCorrect', '-append');
+save(savename_coneresp, 'SVMpercentCorrect', '-append');
 
 end
