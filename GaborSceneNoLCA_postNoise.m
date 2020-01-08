@@ -137,22 +137,25 @@ for mos = 1:length(KLMSdensity)
                 savename_coneresp = fullfile(conerespdir, ['coneExcitation_noiseOff_oi', num2str(oi), '_exp', num2str(exp), '_SF_', num2str(this_sf), '_contr_', num2str(this_contrast), '.mat']);
                 
                 if isfile(savename_coneresp)
-                    stemp = load(savename_coneresp);
-                    coneExcitationsCond1 = stemp.coneExcitationsCond1; 
-                    coneExcitationsCond2 = stemp.coneExcitationsCond2;
-                    if isfield(stemp, 'SVMpercentCorrect')
-                        preparesvm = 0; 
-                        SVMpercentCorrect = stemp.SVMpercentCorrect;
+                    fprintf('This cone excitation instance already exists. Skip computing... \n');
+                    SVMpercentCorrect = load(savename_coneresp, 'SVMpercentCorrect');
+                    if length(SVMpercentCorrect) < nSVMrep
+                        stemp = load(savename_coneresp);
+                        coneExcitationsCond1 = stemp.coneExcitationsCond1;
+                        coneExcitationsCond2 = stemp.coneExcitationsCond2;
                         randomSeed = stemp.randomSeed;
                         stemp_instances = load(fullfile('noisyInstances\noisyInstances_', savename_coneresp));
                         coneExcitationCond1_noisyInstances = stemp_instances.coneExcitationCond1_noisyInstances;
-                        coneExcitationCond2_noisyInstances = stemp_instances.coneExcitationCond2_noisyInstances; 
-                    else 
-                        preparesvm = 1; 
-                    end
-                    fprintf('This cone excitation instance already exists. Skip computing... \n');
-                else
+                        coneExcitationCond2_noisyInstances = stemp_instances.coneExcitationCond2_noisyInstances;
                     
+                        rng(randomSeed);
+                        for rep = length(SVMpercentCorrect):nSVMrep
+                            SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
+                        end
+                        saveparfor_svm(savename_coneresp, SVMpercentCorrect);
+                    end
+                    
+                else
                     %% ------ LOOP FOR EACH CONDITION FROM HERE ------ %%
                     scene1 = generateGaborSceneAO(presentationDisplay, this_coltype(1), this_ort(1), this_sf, this_contrast); % inputs: (display, coltype, ort, sf, contrast)
                     scene2 = generateGaborSceneAO(presentationDisplay, this_coltype(2), this_ort(2), this_sf, this_contrast);
@@ -181,28 +184,22 @@ for mos = 1:length(KLMSdensity)
                     %% Compute the mean cone excitation responses to the stimulus
                     coneExcitationsCond1 = theMosaic.compute(theOIscene1);
                     coneExcitationsCond2 = theMosaic.compute(theOIscene2);
-                    
                     saveparfor(savename_coneresp, coneExcitationsCond1, coneExcitationsCond2); 
+                    
+                    randomSeed = rng;
+                    saveparfor_svm(savename_coneresp, randomSeed); 
+                    
+                    [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
+                    saveparfor_instances(savename_coneresp, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances);
+                    
+                    SVMpercentCorrect = [];
+                    for rep = 1:nSVMrep
+                        SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
+                    end
+                    saveparfor_svm(savename_coneresp, SVMpercentCorrect);
                     
                 end
 
-                if preparesvm
-                    nsvmqueue = 1; 
-                    randomSeed = rng;
-                    saveparfor_rseed(savename_coneresp, randSeed);
-                    SVMpercentCorrect = [];
-                    [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(coneExcitationsCond1, coneExcitationsCond2);
-                    saveparfor_instances(savename_coneresp, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances);
-                else
-                    nsvmqueue = length(SVMpercentCorrect);
-                    rng(randomSeed);
-                end 
-                
-                for rep = nsvmqueue:nSVMrep
-                    SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
-                end
-                saveparfor_svm(savename_coneresp, SVMpercentCorrect);
-                
             end
         end
     end
@@ -237,10 +234,9 @@ save(fullfile('noisyInstances\noisyInstances_', savename_coneresp), 'coneExcitat
 
 end
 
+function saveparfor_svm(savename_coneresp, randomSeed)
 
-function saveparfor_rseed(savename_coneresp, randSeed)
-
-save(savename_coneresp, 'randSeed', '-append');
+save(savename_coneresp, 'randomSeed', '-append');
 
 end
 
