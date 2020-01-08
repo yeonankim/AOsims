@@ -57,6 +57,7 @@ sceneFov = 1.1;%sceneGet(scene_sample, 'fov');
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
 %-------------------------------------------------%
+resultdir = 'Results';
 foldername = 'ConeExcitationInstances_SPDcorrectedScaled_60PCA_1024Instances';
 KLMSdensity = {[0 13/14 1/14 0]', [0 5/6 1/6 0]', [0 2.8/3.8 1/3.8 0]', [0 1.8/2.8 1/2.8 0]', [0.0 0.5 0.5 0.0]', [0 1/2.8 1.8/2.8 0]', [0 1/3.8 2.8/3.8, 0]', [0 1/6 5/6 0]', [0 1/14 13/14 0]'};
 coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
@@ -68,7 +69,6 @@ nSVMrep = 10;
 
 
 % Making dir to save all the simulation results
-resultdir = 'Results';
 if ~isfolder(resultdir)
     mkdir(resultdir);
 end
