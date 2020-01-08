@@ -54,15 +54,16 @@ paramsValues = PAL_PFML_Fit(contrasts(:), trialsNumCorrectPerContrastLevel(:), t
 performanceThreshold = 0.71;
 contrastThreshold = psychometricFunctionModel(paramsValues, performanceThreshold, 'inverse');
 contrastSensitivity = 1/contrastThreshold;
-%% *Step 2c. Visualize fitted function*
 
-% Obtain a high resolution version of the fitted function
-hiResContrasts = searchGridParams.alpha;
-hiResPerformance = PAL_Weibull(paramsValues, hiResContrasts);
-
-% Plot data and fitted function
-plotPsychometricFunction('fitted data', contrasts, fractionCorrect, hiResContrasts, hiResPerformance, contrastThreshold, performanceThreshold);
-%% 
+% %% *Step 2c. Visualize fitted function*
+% 
+% % Obtain a high resolution version of the fitted function
+% hiResContrasts = searchGridParams.alpha;
+% hiResPerformance = PAL_Weibull(paramsValues, hiResContrasts);
+% 
+% % Plot data and fitted function
+% plotPsychometricFunction('fitted data', contrasts, fractionCorrect, hiResContrasts, hiResPerformance, contrastThreshold, performanceThreshold);
+% %% 
 
 end 
 

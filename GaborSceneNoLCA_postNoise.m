@@ -1,6 +1,8 @@
 clear all;
 close all;
 
+rng;
+
 %% Parameters
 %
 % Make a zero vector of Zernike coefficients to
@@ -44,10 +46,10 @@ theOI_control = oiCreate('wvf human');
 
 
 %% Create the scene
-presentationDisplay = displayCreate('AOSim-Seattle_SPDcorrected');
+presentationDisplay = displayCreate('AOSim-Seattle_SPDcorrected_Scaled');
 
 scene_sample = generateGaborSceneAO(presentationDisplay, 1, 1, 1, 1); % just to get the fov for mosaic generation
-sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
+sceneFov = 1.1;%sceneGet(scene_sample, 'fov');
 % ok, if this value is smaller than that size of the scene, the mosaic
 % generation gets error. Here as a quick remedy artificially giving a
 % slightly higer fov.
@@ -55,16 +57,12 @@ sceneFov = 1.05;%sceneGet(scene_sample, 'fov');
 
 %% Generate a hexagonal cone mosaic with ecc-based cone quantal efficiency
 %-------------------------------------------------%
-foldername = 'ConeExcitationInstances_pca60_nInstances1024';
-KLMSdensity = {[0.0 0.5 0.5 0.0]', [0.0 0.9 0.1 0.0]'};%, [0.0 0.2 0.8 0.0]'};
-nSF = 3;
-nContrast = 25; %15;
+foldername = 'ConeExcitationInstances_SPDcorrectedScaled_60PCA_1024Instances';
+KLMSdensity = {[0 13/14 1/14 0]', [0 5/6 1/6 0]', [0 2.8/3.8 1/3.8 0]', [0 1.8/2.8 1/2.8 0]', [0.0 0.5 0.5 0.0]', [0 1/2.8 1.8/2.8 0]', [0 1/3.8 2.8/3.8, 0]', [0 1/6 5/6 0]', [0 1/14 13/14 0]'};
 coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
 ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
-sf_set = [10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
-contrast_set = 10.^linspace(log10(0.001), log10(0.05), nContrast); %10.^linspace(log10(0.03), log10(0.1), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
-% contrast_set = contrast_set(2:end);
-% nContrast = nContrast-1; 
+sf_set = [4, 8, 16, 24, 32, 48, 64]; nSF = length(sf_set); %[10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
+nContrast = 25; contrast_set = 10.^linspace(log10(0.003), log10(0.08), nContrast); %10.^linspace(log10(0.03), log10(0.1), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
 nSVMrep = 10; 
 %-------------------------------------------------%
 

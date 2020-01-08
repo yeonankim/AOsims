@@ -1,4 +1,4 @@
-function [scene, I, linearizedI] = generateGaborSceneAO(display, coltype, ort, sf, cont)
+function [scene, I] = generateGaborSceneAO(display, coltype, ort, sf, cont)
 
 % coltype: 1 -- color, 0 -- black white
 % ort: 1 -- vertical, 0 -- horizontal
@@ -6,10 +6,7 @@ function [scene, I, linearizedI] = generateGaborSceneAO(display, coltype, ort, s
 %% HERE'S THE ACTUAL MAKE-GRAITNG PART
 TCA = [0, 0]; 
 
-load('gamma_data.mat'); 
-% load('LuminousEfficiencyFunction.mat')
-inverted_gamma_params = GammaCorrection(gamma_data);
-% % RGLuminanceScaling = ScaleRGIntensity(Wavelength, LuminousEfficiencyFunction, R0Intensity, G0Intensity, R255Intensity, G255Intensity);
+load('inverted_gamma_params.mat'); 
 RGLuminanceScaling = 1;
 % 
 % BackgroundCol = [0.5, 0.5, 0];
@@ -38,7 +35,7 @@ stim(:,:,1) = stim_plane_red;
 stim(:,:,2) = stim_plane_green;
 stim = CorrectGammaBitTXTRG(stim, inverted_gamma_params, RGLuminanceScaling);
 
-[scene, I, linearizedI] = sceneFromFile(stim, 'rgb', [], display);
+[scene, I] = sceneFromFile(stim, 'rgb', [], display);
 
 % figure; 
 % imshow(stim);
