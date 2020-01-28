@@ -1,4 +1,4 @@
-function [contrastSensitivity, contrastThreshold] = fitPsychometricFn(contrasts, dat)
+function [contrastSensitivity, contrastThreshold] = fitPsychometricFn(contrasts, dat, varargin)
 
 %% *Introductory script illustrating how to fit a Weibul function to psychometric data (performance as a function of stimulus contrast)*
 % _This tutorial fits a cumulative Weibull function to a psychometric dataset 
@@ -55,14 +55,18 @@ performanceThreshold = 0.71;
 contrastThreshold = psychometricFunctionModel(paramsValues, performanceThreshold, 'inverse');
 contrastSensitivity = 1/contrastThreshold;
 
-% %% *Step 2c. Visualize fitted function*
-% 
-% % Obtain a high resolution version of the fitted function
-% hiResContrasts = searchGridParams.alpha;
-% hiResPerformance = PAL_Weibull(paramsValues, hiResContrasts);
-% 
-% % Plot data and fitted function
-% plotPsychometricFunction('fitted data', contrasts, fractionCorrect, hiResContrasts, hiResPerformance, contrastThreshold, performanceThreshold);
+if nargin == 3
+    if varargin{1}
+        %% *Step 2c. Visualize fitted function*
+        
+        % Obtain a high resolution version of the fitted function
+        hiResContrasts = searchGridParams.alpha;
+        hiResPerformance = PAL_Weibull(paramsValues, hiResContrasts);
+        
+        % Plot data and fitted function
+        plotPsychometricFunction('fitted data', contrasts, fractionCorrect, hiResContrasts, hiResPerformance, contrastThreshold, performanceThreshold);
+    end
+end 
 % %% 
 
 end 

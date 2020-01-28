@@ -16,8 +16,8 @@ function correctedColBit = CorrectGammaBitTXTRG(Col, inverted_gamma_params, RGLu
   correctedR = InvertGammaExtP(RParameter, 255, R);
   correctedG = InvertGammaExtP(GParameter, 255, G);
 
-%   correctedColBit = round(cat(3, correctedR,correctedG,B * 255));
-  correctedColBit = cat(3, correctedR,correctedG,B * 255);
+  correctedColBit = round(cat(3, correctedR,correctedG,B * 255));
+%   correctedColBit = cat(3, correctedR,correctedG,B * 255);
 
   if exist('ColorChannel')
     if strcmp(ColorChannel, 'R')

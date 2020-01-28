@@ -62,9 +62,10 @@ foldername = 'ConeExcitationInstances_SPDcorrectedScaled_60PCA_1024Instances';
 KLMSdensity = {[0 13/14 1/14 0]', [0 5/6 1/6 0]', [0 2.8/3.8 1/3.8 0]', [0 1.8/2.8 1/2.8 0]', [0.0 0.5 0.5 0.0]', [0 1/2.8 1.8/2.8 0]', [0 1/3.8 2.8/3.8, 0]', [0 1/6 5/6 0]', [0 1/14 13/14 0]'};
 coltype_set = {[0 0], [1 1], [0 1]};     % isochromatic, isoluminant, isochromatic vs. isoluminant
 ort_set = {[0 1], [0 1], [1 1]};         % diff orts, diff orts, same ort
-sf_set = [4, 8, 16, 24, 32, 48, 64]; nSF = length(sf_set); %[10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
-nContrast = 25; contrast_set = 10.^linspace(log10(0.003), log10(0.08), nContrast); %10.^linspace(log10(0.03), log10(0.1), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
-nSVMrep = 10; 
+sf_set = [4, 8, 16, 24, 32, 48, 64]; 
+nSF = length(sf_set); %[10 30 60]; %linspace(5, 50, nSF);             % for each of the three above
+nContrast = 15; contrast_set = 10.^linspace(log10(0.001), log10(0.08), nContrast); %10.^linspace(log10(0.03), log10(0.1), nContrast); %linspace(0.001, 0.05, nContrast); % for each of the three above
+nSVMrep = 1; 
 %-------------------------------------------------%
 
 
@@ -140,18 +141,19 @@ for mos = 1:length(KLMSdensity)
                 
                 if isfile(savename_coneresp)
                     fprintf('This cone excitation instance already exists. Skip computing... \n');
-                    SVMpercentCorrect = load(savename_coneresp, 'SVMpercentCorrect');
-                    if length(SVMpercentCorrect) < nSVMrep
-                        stemp = load(savename_coneresp);
-                        coneExcitationsCond1 = stemp.coneExcitationsCond1;
-                        coneExcitationsCond2 = stemp.coneExcitationsCond2;
-                        randomSeed = stemp.randomSeed;
-                        stemp_instances = load(savename_coneresp_instances);
-                        coneExcitationCond1_noisyInstances = stemp_instances.coneExcitationCond1_noisyInstances;
-                        coneExcitationCond2_noisyInstances = stemp_instances.coneExcitationCond2_noisyInstances;
-                    
-                        rng(randomSeed);
-                        for rep = length(SVMpercentCorrect):nSVMrep
+                    [runsvm, nrunadd] = checkforsvm(savename_coneresp, nSVMrep);
+                    if runsvm
+                        if isfile(savename_coneresp_instances)
+                            stemp_instances = load(savename_coneresp_instances);
+                            coneExcitationCond1_noisyInstances = stemp_instances.coneExcitationCond1_noisyInstances;
+                            coneExcitationCond2_noisyInstances = stemp_instances.coneExcitationCond2_noisyInstances;
+                        else
+                            stemp = load(savename_coneresp);
+                            [coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances] = coneExcitationAddNoise(stemp.coneExcitationsCond1, stemp.coneExcitationsCond2);
+                            saveparfor_instances(savename_coneresp_instances, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances);
+                        end
+                        SVMpercentCorrect = [];
+                        for rep = 1:nrunadd
                             SVMpercentCorrect = [SVMpercentCorrect, svm_pca(theMosaic, coneExcitationCond1_noisyInstances, coneExcitationCond2_noisyInstances)];
                         end
                         saveparfor_svm(savename_coneresp, SVMpercentCorrect);
@@ -244,7 +246,30 @@ end
 
 function saveparfor_svm(savename_coneresp, SVMpercentCorrect)
 
-fprintf('%s: %.2f \n', savename_coneresp, SVMpercentCorrect);
+fprintf('%s: %.2f \n', savename_coneresp, mean(SVMpercentCorrect));
+if ismember(who('-file', savename_coneresp), 'SVMpercentCorrect')
+    SVMpercentCorrect_prev = load(savename_coneresp, 'SVMpercentCorrect');
+    SVMpercentCorrect = [SVMpercentCorrect_prev, SVMpercentCorrect];
+end
 save(savename_coneresp, 'SVMpercentCorrect', '-append');
 
 end
+
+function [runsvm, nrunadd] = checkforsvm(savename_coneresp, nSVMrep)
+if ismember(who('-file', savename_coneresp), 'SVMpercentCorrect')
+    SVMpercentCorrect = load(savename_coneresp, 'SVMpercentCorrect'); 
+end 
+if length(SVMpercentCorrect) < nSVMrep
+    runsvm = true;
+    nrunadd = nSVM-length(SVMpercentCorrect);
+    if ~ismember(who('-file', savename_coneresp), 'randomSeed')
+        randomSeed = rng;
+        saveparfor_rseed(savename_coneresp, randomSeed);
+    end
+    fprintf('%d SVM run exists. Adding %d more runs... \n', length(SVMpercentCorrect), nrunadd);
+else
+    runsvm = false;
+    nrunadd = 0;
+    fprintf('%d SVM run exists - this simulation is complete. \n', length(SVMpercentCorrect)); 
+end 
+end 
