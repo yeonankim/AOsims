@@ -118,6 +118,8 @@ for mos = 1:length(KLMSdensity)
     condIdPerColtype = [floor((0:nSF*nContrast-1)/nContrast)' + 1, mod(0:nSF*nContrast-1, nContrast)' + 1];
     
     for oi = 1:2
+        % For oi==1, do LCA off, everything OFF
+        % For oi==2, do LCA on, normal wvf
         if oi == 2
             theOI = theOI_control;
             disp('Now using the control OI.');
