@@ -3,47 +3,7 @@ close all;
 
 rng;
 
-%% Parameters
-%
-% Make a zero vector of Zernike coefficients to
-% represent a diffraction limited pupil function,
-% and a few other things.
-pupilDiameterMm = 6;
-wave = (400:10:700)';
-accommodatedWavelength = 530;
-zCoeffs = zeros(66,1);
-
-LCAoff = true;
-opticsName = 'human-wvf-withlca';
-
-
-%% Set up wavefront optics object
-% Compute pupil function using 'no lca' key/value pair to turn off LCA.
-% You can turn it back on to compare the effect.
-wvfP = wvfCreate('calc wavelengths', wave, ...
-    'zcoeffs', zCoeffs, ...
-    'measured pupil size', pupilDiameterMm, ...
-    'calc pupil size', pupilDiameterMm, ...
-    'measured wavelength', accommodatedWavelength, ...
-    'name', sprintf('human-%d', pupilDiameterMm));
-% Deal with best focus by specifying that the wavefront parameters
-% were measured at the wavelength we want to say is in focus. This
-% is a little bit of a hack but seems OK for the diffraction limited case
-% we're using here.
-
-
-%% Make optical image object using wvfP and no LCA calc
-% Same as above but don't defeat LCA calc
-wvfP = wvfComputePupilFunction(wvfP,false,'no lca', LCAoff);
-wvfP = wvfComputePSF(wvfP);
-theOI = wvf2oi(wvfP);
-optics = oiGet(theOI, 'optics');
-if LCAoff; opticsName = 'human-wvf-nolca'; end
-optics = opticsSet(optics, 'model', 'shift invariant', 'name', opticsName);
-theOI = oiSet(theOI,'optics',optics);
-
-theOI_control = oiCreate('wvf human');
-
+[theOI_control,theOI]=make_optics();
 
 %% Create the scene
 presentationDisplay = displayCreate('AOSim-Seattle_SPDcorrected_Scaled');
